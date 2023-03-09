@@ -81,6 +81,7 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
                     String processResult = Arrays.stream(bodyContent.split(" ")).collect(Collectors.joining(" , "));
                     exchange.getIn().setBody(processResult);
                 })
-                .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination")
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination?filename=myData.csv");
     }
 }
