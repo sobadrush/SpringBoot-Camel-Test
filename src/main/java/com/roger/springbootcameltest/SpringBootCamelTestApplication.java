@@ -20,7 +20,9 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
     public void configure() throws Exception {
         System.out.println(" === 執行Camel - configure 開始 === ");
         // this.moveAllFiles();
-        this.moveSpecificFile(header(Exchange.FILE_NAME).startsWith("song"));
+        // this.moveSpecificFile(header(Exchange.FILE_NAME).startsWith("song"));
+        // this.moveSpecificFileWithContentStartsWith("紅");
+        this.moveSpecificFileWithContentContains("窮");
         System.out.println(" === 執行Camel - configure 結束 === ");
     }
 
@@ -31,7 +33,7 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
         String currentDir = System.getProperty("user.dir");
         // 1. 移動目錄下的檔案們到另一目錄
         from("file:" + currentDir + "/Files_Origin?noop=true") // "noop=true" 這個指示告訴路由器保留（而不是刪除）相關的設定。
-               .to("file:" + currentDir + "/Files_Destination");
+                .to("file:" + currentDir + "/Files_Destination");
     }
 
     /**
@@ -40,6 +42,28 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
     private void moveSpecificFile(Predicate predicate) {
         from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
                 .filter(predicate)
-        .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
+    }
+
+    /**
+     * 根據檔案內容 startsWith 決定搬移的檔案
+     */
+    private void moveSpecificFileWithContentStartsWith(String content) {
+        from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
+                .filter(body().startsWith(content))
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
+    }
+
+    /**
+     * 根據檔案內容 contains 決定搬移的檔案
+     */
+    private void moveSpecificFileWithContentContains(String content) {
+        from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
+                .filter((exchange -> {
+                    String bodyContent = exchange.getIn().getBody(String.class);
+                    System.out.println("文檔內容：" + bodyContent);
+                    return bodyContent.contains(content);
+                }))
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
     }
 }
