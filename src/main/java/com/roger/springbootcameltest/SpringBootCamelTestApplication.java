@@ -20,7 +20,7 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
         System.err.println(MessageFormat.format("currentDir = {0}", currentDir));
         // 1. 移動目錄下的檔案們到另一目錄
         from("file:" + currentDir + "/Files_Origin?noop=true") // "noop=true" 這個指示告訴路由器保留（而不是刪除）相關的設定。
-                .to("file:" + currentDir + "/Files_Destination?noop=true");
+                .to("file:" + currentDir + "/Files_Destination");
         System.out.println(" === 執行Camel - configure 結束 === ");
     }
 
