@@ -1,11 +1,13 @@
 package com.roger.springbootcameltest;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.text.MessageFormat;
+import java.util.function.BiFunction;
 
 @SpringBootApplication
 public class SpringBootCamelTestApplication extends RouteBuilder {
@@ -18,7 +20,7 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
     public void configure() throws Exception {
         System.out.println(" === 執行Camel - configure 開始 === ");
         // this.moveAllFiles();
-        this.moveSpecificFile("song");
+        this.moveSpecificFile(header(Exchange.FILE_NAME).startsWith("song"));
         System.out.println(" === 執行Camel - configure 結束 === ");
     }
 
@@ -35,9 +37,9 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
     /**
      * 移動指定檔案
      */
-    private void moveSpecificFile(String keyword) {
+    private void moveSpecificFile(Predicate predicate) {
         from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
-                .filter(header(Exchange.FILE_NAME).startsWith(keyword))
+                .filter(predicate)
         .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
     }
 }
