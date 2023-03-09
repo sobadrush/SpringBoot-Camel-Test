@@ -7,7 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class SpringBootCamelTestApplication extends RouteBuilder {
@@ -22,7 +24,8 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
         // this.moveAllFiles();
         // this.moveSpecificFile(header(Exchange.FILE_NAME).startsWith("song"));
         // this.moveSpecificFileWithContentStartsWith("紅");
-        this.moveSpecificFileWithContentContains("窮");
+        // this.moveSpecificFileWithContentContains("窮");
+        this.moveFilesWithProcess();
         System.out.println(" === 執行Camel - configure 結束 === ");
     }
 
@@ -64,6 +67,20 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
                     System.out.println("文檔內容：" + bodyContent);
                     return bodyContent.contains(content);
                 }))
+                .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
+    }
+
+    /**
+     * 搬移的檔案 & 處理內容
+     */
+    private void moveFilesWithProcess() {
+        from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
+                .filter(header(Exchange.FILE_NAME).startsWith("text"))
+                .process(exchange -> {
+                    String bodyContent = exchange.getIn().getBody(String.class);
+                    String processResult = Arrays.stream(bodyContent.split(" ")).collect(Collectors.joining(" , "));
+                    exchange.getIn().setBody(processResult);
+                })
                 .to("file:" + System.getProperty("user.dir") + "/Files_Destination");
     }
 }
