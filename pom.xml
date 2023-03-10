@@ -45,6 +45,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- camel-csv -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-csv</artifactId>
+            <version>3.20.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -8,7 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.function.BiFunction;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
@@ -25,7 +26,8 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
         // this.moveSpecificFile(header(Exchange.FILE_NAME).startsWith("song"));
         // this.moveSpecificFileWithContentStartsWith("紅");
         // this.moveSpecificFileWithContentContains("窮");
-        this.moveFilesWithProcess();
+        // this.moveFilesWithProcess();
+        this.multiFileProcessor();
         System.out.println(" === 執行Camel - configure 結束 === ");
     }
 
@@ -83,5 +85,35 @@ public class SpringBootCamelTestApplication extends RouteBuilder {
                 })
                 .to("file:" + System.getProperty("user.dir") + "/Files_Destination")
                 .to("file:" + System.getProperty("user.dir") + "/Files_Destination?filename=myData.csv");
+    }
+
+    /**
+     * 處理多個檔案 Processor
+     * 需搭配 camel-csv 的 dependency
+     */
+    private void multiFileProcessor() {
+        from("file:" + System.getProperty("user.dir") + "/Files_Origin?noop=true")
+            .filter(header(Exchange.FILE_NAME).isEqualTo("PaymentMode.txt"))
+            .unmarshal().csv() // 該行程式碼是將CSV格式的資料解析成物件列表
+            .split(body().tokenize(",")) // 該行程式碼是基於逗號分隔符號，將CSV資料拆分為單獨的行
+            .choice() // 開始一個條件語句，可以根據特定的條件進行進一步的處理
+            .when(body().contains("Closed")).to(this.getOutputFile("Closed"))
+            .when(body().contains("Pending")).to(this.getOutputFile("Pending"))
+            .when(body().contains("Interest")).to(this.getOutputFile("Interest"))
+        ;
+    }
+
+    /**
+     * 根據輸入的關鍵字，在指定的映射中查找對應的輸出檔案名稱，
+     * 並生成一個包含路徑、檔案名稱和編碼方式的完整字串
+     */
+    private String getOutputFile(String keyword) {
+        Map<String, String> outputMap = new HashMap<>();
+        outputMap.put("Closed", "closed.csv");
+        outputMap.put("Pending", "Pending.csv");
+        outputMap.put("Interest", "Interest.csv");
+        String template = "file:{0}/Files_Destination?filename={1}&charset=UTF-8";
+        Object[] arguments = new Object[] { System.getProperty("user.dir"), outputMap.get(keyword) };
+        return MessageFormat.format(template, arguments);
     }
 }
